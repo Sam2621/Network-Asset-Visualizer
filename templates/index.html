@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>
+    NMAP SCAN
+  </title>
+  <link rel = "icon" href = "https://www.hostdime.in/blog/wp-content/uploads/2017/06/nmap.png" type = "image/x-icon">
+  <link href='https://fonts.googleapis.com/css?family=Pacifico' rel='stylesheet' type='text/css'>
+  <link href='https://fonts.googleapis.com/css?family=Arimo' rel='stylesheet' type='text/css'>
+  <link href='https://fonts.googleapis.com/css?family=Hind:300' rel='stylesheet' type='text/css'>
+  <link href='https://fonts.googleapis.com/css?family=Open+Sans+Condensed:300' rel='stylesheet' type='text/css'>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+
+<body style="background: rgb(114, 114, 114);">
+  <div class="login">
+    <h1>Network Asset Visualization</h1>
+
+    <!-- Main Input For Receiving Query to our ML -->
+    <form action="{{ url_for('pscan') }}" method="post">
+      <input type="text" name="a" id="a" placeholder="Enter the IP range" required="required" />
+      <button type="submit" class="btn btn-primary btn-block btn-large submit-btn">Submit</button>
+    </form>
+
+    <br>
+    <br>
+
+    <!-- Displaying the scrollable list of results -->
+    <div class="result-list">
+        <table>
+          <tr>
+            <th>HOST</th>
+            <th>STATE</th>
+          </tr>
+          {% for key, value in results.items() %}
+            <tr>
+              <td>
+                <a href="#" class="host-link" data-ip="{{ key }}">{{ key }}</a>
+              </td>
+              <td>{{ value }}</td>
+            </tr>
+          {% endfor %}
+        </table>
+    </div>
+
+
+    <!-- Loader element -->
+    <div id="loader" class="loader"></div>
+
+    <!-- Please Wait... message -->
+    <div class="loading-message">Please Wait...</div>
+
+
+    <!-- Popup -->
+    <div id="popup" class="popup"></div> 
+    <script src="https://code.jquery.com/jquery-3.4.1.min.js" integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" crossorigin="anonymous"></script> 
+      <script>
+        var popup = document.getElementById('popup');
+      
+        // Add click event listener to host links
+        var hostLinks = document.getElementsByClassName('host-link');
+        Array.from(hostLinks).forEach(function(link) {
+          link.addEventListener('click', function(event) {
+            event.preventDefault();
+            var ip = this.getAttribute('data-ip');
+            openPopup(ip);
+          });
+        });
+      
+        // Open the popup with the specified IP
+        function openPopup(ip) {
+          
+          var popupOverlay = document.createElement('div');
+          popupOverlay.classList.add('popup-overlay');
+          document.body.appendChild(popupOverlay);
+          
+          popup.innerHTML = '<div class="close-btn" onclick="closePopup()">&times;</div>';
+          var loader = document.getElementById('loader');
+          var loadingMessage = document.querySelector('.loading-message');
+          loader.style.display = 'block'; // Show the loader
+          loadingMessage.style.display = 'block'; // Show the "Please Wait..." message
+          popupOverlay.style.display = 'block'; // Show the background overlay
+          
+      
+          $.ajax({
+            type: 'post',
+            dataType: 'json',
+            url: '/dscan',
+            data: {
+
+                "ip": ip
+            },
+            success: function(res) {
+                let results = res.results;
+                console.log(results);
+
+                // Create a div to display the results in the pop-up
+                var resultsDiv = document.createElement('div');
+                resultsDiv.classList.add('popup-content');
+
+                // Create a table for Host, Host name, OS, and Protocol
+                var generalInfoTable = document.createElement('table');
+                generalInfoTable.classList.add('results-table');
+
+                // Create the table body and populate it with general info
+                var generalInfoTbody = document.createElement('tbody');
+                var generalInfoHeaders = ['Host', 'Host name', 'OS', 'Protocol'];
+
+                var generalInfoRow = document.createElement('tr');
+                for (var i = 0; i < generalInfoHeaders.length; i++) {
+                  var th = document.createElement('th');
+                  th.textContent = generalInfoHeaders[i];
+                  generalInfoRow.appendChild(th);
+
+                  var td = document.createElement('td');
+                  td.textContent = results[0][generalInfoHeaders[i]];
+                  generalInfoRow.appendChild(td);
+                }
+                generalInfoTbody.appendChild(generalInfoRow);
+                generalInfoTable.appendChild(generalInfoTbody);
+
+                // Append general info table to the results div
+                resultsDiv.appendChild(generalInfoTable);
+
+                // Create a table for Port, State, Service, and Reason
+                var portInfoTable = document.createElement('table');
+                portInfoTable.classList.add('results-table');
+
+                // Create the table header
+                var portInfoThead = document.createElement('thead');
+                var portInfoHeaderRow = document.createElement('tr');
+                var portInfoHeaders = ['Port', 'State', 'Service', 'Reason'];
+
+                for (var i = 0; i < portInfoHeaders.length; i++) {
+                  var th = document.createElement('th');
+                  th.textContent = portInfoHeaders[i];
+                  portInfoHeaderRow.appendChild(th);
+                }
+
+                portInfoThead.appendChild(portInfoHeaderRow);
+                portInfoTable.appendChild(portInfoThead);
+
+                // Create the table body and populate it with the results
+                var portInfoTbody = document.createElement('tbody');
+
+                for (var i = 1; i < results.length; i++) {
+                  var rowData = results[i];
+                  var row = document.createElement('tr');
+
+                  for (var key in rowData) {
+                    var cell = document.createElement('td');
+                    cell.textContent = rowData[key];
+                    row.appendChild(cell);
+                  }
+
+                  portInfoTbody.appendChild(row);
+                }
+
+                portInfoTable.appendChild(portInfoTbody);
+                resultsDiv.appendChild(portInfoTable);
+
+                // Append the results div to the popup
+                popup.appendChild(resultsDiv);
+
+                // Hide the loader, "Please Wait..." message, and background overlay
+                loader.style.display = 'none';
+                loadingMessage.style.display = 'none';
+                popupOverlay.style.display = 'none';
+
+                // Display the popup
+                popup.style.display = 'block';
+            
+
+                // Add click event listener to close the popup
+                window.addEventListener('click', closePopup);
+            },
+
+            error: function(err) {
+              console.log('Error:', err);
+              // Hide the loader, "Please Wait..." message, and background overlay
+              loader.style.display = 'none';
+              loadingMessage.style.display = 'none';
+              popupOverlay.style.display = 'none';
+            }
+
+           });
+        }
+      
+        // Close the popup
+        function closePopup(event) {
+          if (event && event.target !== popup && !popup.contains(event.target)) {
+            return;
+          }
+          popup.style.display = 'none';
+          popup.innerHTML = '';
+          window.removeEventListener('click', closePopup);
+        }
+      </script>
+      
+      
+
+ </body>
+</html>

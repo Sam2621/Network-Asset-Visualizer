@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>
+    NMAP SCAN
+  </title>
+  <link rel = "icon" href = "https://www.hostdime.in/blog/wp-content/uploads/2017/06/nmap.png" type = "image/x-icon">
+  <link href='https://fonts.googleapis.com/css?family=Pacifico' rel='stylesheet' type='text/css'>
+  <link href='https://fonts.googleapis.com/css?family=Arimo' rel='stylesheet' type='text/css'>
+  <link href='https://fonts.googleapis.com/css?family=Hind:300' rel='stylesheet' type='text/css'>
+  <link href='https://fonts.googleapis.com/css?family=Open+Sans+Condensed:300' rel='stylesheet' type='text/css'>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+
+<body style="background: rgb(114, 114, 114);">
+  <div class="login">
+    <h1>Network Asset Visualization</h1>
+
+    <!-- Main Input For Receiving Query to our ML -->
+    <form action="{{ url_for('pscan') }}" method="post">
+      <input type="text" name="a" id="a" placeholder="Enter the IP range" required="required" />
+      <button type="submit" class="btn btn-primary btn-block btn-large submit-btn">Submit</button>
+    </form>
+
+    <br>
+    <br>
+
+    <!-- Displaying the scrollable list of results -->
+    <div class="result-list">
+      <table>
+        <tr>
+          <th>HOST</th>
+          <th>STATE</th>
+        </tr>
+        {% for key, value in results.items() %}
+          <tr>
+            <td>{{ key }}</td>
+            <td>{{ value }}</td>
+          </tr>
+        {% endfor %}
+      </table>
+    </div>
+
+    <br>
+    <br>
+
+    <form action="{{ url_for('dscan') }}" method="post">
+        <input type="text" name="b" id="b" placeholder="Enter the IP to scan" required="required" />
+        <input type="text" name="c" id="c" placeholder="Enter the ports to scan" required="required" />
+        <button type="submit" class="btn btn-primary btn-block btn-large ">Submit</button>
+    </form>
+
+    <br>
+    <br>
+
+
+    <!-- Displaying the scrollable list of results -->
+    <div class="result-list">
+      <table>
+        <tr>
+          <th>HOST</th>
+          <th>HOST NAME</th>
+          <th>OS</th>
+          <th>PROTOCOL</th>
+          <th>PORT</th>
+          <th>STATE</th>
+          <th>SERVICE</th>
+          <th>REASON</th>
+        </tr>
+        <tr>
+          {% if results1 %}
+          <td rowspan="{{ results1|length }}">{{ results1[0]['Host'] }}</td>
+          <td rowspan="{{ results1|length }}">{{ results1[0]['Host name'] }}</td>
+          <td rowspan="{{ results1|length }}">{{ results1[0]['OS'] }}</td>
+          <td rowspan="{{ results1|length }}">{{ results1[0]['Protocol'] }}</td>
+          {% endif %}
+        </tr>
+        {% for i in range(1, results1|length) %}
+          <tr>
+            <td>{{ results1[i]['Port'] }}</td>
+            <td>{{ results1[i]['State'] }}</td>
+            <td>{{ results1[i]['Service'] }}</td>
+            <td>{{ results1[i]['Reason'] }}</td>
+          </tr>
+        {% endfor %}  
+      </table>
+    </div>
+    
+  </div>
+  <br>
+  <br>
+  <br>
+  <br>
+</body>
+</html>

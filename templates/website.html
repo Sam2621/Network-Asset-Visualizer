@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html >
+<head>
+  <meta charset="UTF-8">
+  <title>NMAP SCAN</title>
+  <link href='https://fonts.googleapis.com/css?family=Pacifico' rel='stylesheet' type='text/css'>
+<link href='https://fonts.googleapis.com/css?family=Arimo' rel='stylesheet' type='text/css'>
+<link href='https://fonts.googleapis.com/css?family=Hind:300' rel='stylesheet' type='text/css'>
+<link href='https://fonts.googleapis.com/css?family=Open+Sans+Condensed:300' rel='stylesheet' type='text/css'>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  
+</head>
+
+<body style="background: rgb(114, 114, 114);">
+  <style>
+    .result-container {
+        height: 440px;
+        overflow: auto;
+    }
+  </style>
+ <div class="login">
+	<h1>Network Asset Visualization</h1>
+
+     <!-- Main Input For Receiving Query to our ML -->
+
+    <form action="{{ url_for('pscan')}}"method="post">
+        <input type="text" name="a" id="a" placeholder="Enter the IP range" required="required" />
+        <button type="submit" class="btn btn-primary btn-block btn-large submit-btn">Submit</button>
+    </form>
+
+   <br>
+   <br>
+   <div class="result-container">
+
+   </div>
+
+ </div>
+ <script src="https://code.jquery.com/jquery-3.7.0.min.js" integrity="sha256-2Pmvv0kuTBOenSvLm6bvfBSSHrUJ+3A7x6P5Ebd07/g=" crossorigin="anonymous"></script>
+ <script>
+  $('.submit-btn').on('click',(e) => {
+    e.preventDefault(true);
+    let aVal = $('#a').val();
+    $.ajax({
+        type: "POST",
+        url: "{{ url_for('pscan')}}",
+        data: {a: aVal},
+        dataType: "JSON",
+        success: function(resultData){
+          $('.result-container').empty();
+          var results = Object.entries(resultData);
+          results.forEach(myFunction);
+        }
+    });
+  })
+  function myFunction(item,index) {
+    if(item.length > 1) {
+      $('.result-container').append(`<p> ${item[0]} : ${item[1]} </p>`)
+    }
+  }
+  
+ </script>
+</body>
+</html>
